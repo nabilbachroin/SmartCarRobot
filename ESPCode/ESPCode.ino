@@ -2,12 +2,13 @@
 
 const int trigPin1 = 12; 
 const int echoPin1 = 13;
-// const int trigPin2 = ;
-// const int echoPin2 = ;
-// const int trigPin3 = ; 
-// const int echoPin3 = ; 
-// const int trigPin4 = ; 
-// const int echoPin4 = ;
+const int trigPin2 = 27;
+const int echoPin2 = 14;
+const int trigPin3 = 26; 
+const int echoPin3 = 25; 
+const int trigPin4 = 33; 
+const int echoPin4 = 32;
+const int ledInd = 22;
 
 float getDistance(int trigPin, int echoPin) {
   digitalWrite(trigPin, LOW);
@@ -26,35 +27,49 @@ void setup() {
 
   pinMode(trigPin1, OUTPUT);
   pinMode(echoPin1, INPUT);
-  // pinMode(trigPin2, OUTPUT);
-  // pinMode(echoPin2, INPUT);
-  // pinMode(trigPin3, OUTPUT);
-  // pinMode(echoPin3, INPUT);
-  // pinMode(trigPin4, OUTPUT);
-  // pinMode(echoPin4, INPUT);
+  pinMode(trigPin2, OUTPUT);
+  pinMode(echoPin2, INPUT);
+  pinMode(trigPin3, OUTPUT);
+  pinMode(echoPin3, INPUT);
+  pinMode(trigPin4, OUTPUT);
+  pinMode(echoPin4, INPUT);
+  pinMode(ledInd, OUTPUT);
+
+  digitalWrite(ledInd, 1); delay(3000);
+  digitalWrite(ledInd, 0);
 }
 
 void loop() {
-  float BottomDistance_L = getDistance(trigPin1, echoPin1);
-  //float distance2 = getDistance(trigPin2, echoPin2);
-  //float distance3 = getDistance(trigPin3, echoPin3);
-  //float distance4 = getDistance(trigPin4, echoPin4);
+  int BottomDistance_L = getDistance(trigPin1, echoPin1);
+  int BottomDistance_R = getDistance(trigPin2, echoPin2);
+  int TopDistance_L = getDistance(trigPin3, echoPin3);
+  int TopDistance_R = getDistance(trigPin4, echoPin4);
 
-  Serial.print("Jarak Sensor 1: ");
+  if((BottomDistance_L < 3 || BottomDistance_L > 4) || (BottomDistance_R < 2 || BottomDistance_R > 4) ||
+     (TopDistance_L < 13) || (TopDistance_R < 13))
+     {
+        digitalWrite(ledInd, 1);
+     }
+  else
+     {
+        digitalWrite(ledInd, 0);
+     }
+
+  Serial.print("BottomDistance_L: ");
   Serial.print(BottomDistance_L);
   Serial.println(" cm");
 
-  // Serial.print("Jarak Sensor 2: ");
-  // Serial.print(distance2);
-  // Serial.println(" cm");
+  Serial.print("BottomDistance_R: ");
+  Serial.print(BottomDistance_R);
+  Serial.println(" cm");
 
-  // Serial.print("Jarak Sensor 3: ");
-  // Serial.print(distance3);
-  // Serial.println(" cm");
+  Serial.print("TopDistance_L: ");
+  Serial.print(TopDistance_L);
+  Serial.println(" cm");
 
-  // Serial.print("Jarak Sensor 4: ");
-  // Serial.print(distance4);
-  // Serial.println(" cm");
+  Serial.print("TopDistance_R: ");
+  Serial.print(TopDistance_R);
+  Serial.println(" cm");
 
-  delay(1000);
+  delay(333);
 }
