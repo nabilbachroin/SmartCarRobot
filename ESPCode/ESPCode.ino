@@ -11,13 +11,13 @@ const int trigPin4 = 33;
 const int echoPin4 = 32;
 
 // Motor 1
-const int motor1Pin1 = 2;
-const int motor1Pin2 = 4;
-const int enable1Pin = 5; // Speed (PWM)
+const int left_motorPin1 = 2;
+const int left_motorPin2 = 4;
+const int left_pwm = 5; // Speed (PWM)
 // Motor 2
-const int motor2Pin1 = 15;
-const int motor2Pin2 = 17;
-const int enable2Pin = 18; // Speed (PWM)
+const int right_motorPin1 = 15;
+const int right_motorPin2 = 17;
+const int right_pwm = 18; // Speed (PWM)
 
 const int ledInd = 22;
 Bonezegei_DHT11 dht(21);
@@ -48,12 +48,12 @@ void setup() {
   pinMode(echoPin4, INPUT);
   pinMode(ledInd, OUTPUT);
 
-  pinMode(motor1Pin1, OUTPUT);
-  pinMode(motor1Pin2, OUTPUT);
-  pinMode(enable1Pin, OUTPUT);
-  pinMode(motor2Pin1, OUTPUT);
-  pinMode(motor2Pin2, OUTPUT);
-  pinMode(enable2Pin, OUTPUT);
+  pinMode(left_motorPin1, OUTPUT);
+  pinMode(left_motorPin2, OUTPUT);
+  pinMode(left_pwm, OUTPUT);
+  pinMode(right_motorPin1, OUTPUT);
+  pinMode(right_motorPin2, OUTPUT);
+  pinMode(right_pwm, OUTPUT);
 
   dht.begin();
   digitalWrite(ledInd, 1); delay(3000);
@@ -69,11 +69,51 @@ void loop() {
   if((BottomDistance_L < 3 || BottomDistance_L > 4) || (BottomDistance_R < 2 || BottomDistance_R > 4) ||
      (TopDistance_L < 13) || (TopDistance_R < 13))
      {
-        //digitalWrite(ledInd, 1);
+        stop(); delay(500);
+
+        if((TopDistance_L < 13) || (TopDistance_R < 13))
+          {
+            if(TopDistance_L < 13)
+              {
+                move(-1, 1, 33); delay(500);
+                stop();
+                /* check flame
+                if(flame == 1)
+                  {
+                    digitalWrite(fan, 1);
+                    move(-1, 1, 133); delay(333);
+                    move(1, -1, 133); delay(666);
+                    move(-1, 1, 133); delay(333);
+                    stop();
+                    digitalWrite(fan, 0);
+                  }
+                */
+              }
+            else
+              {
+                move(1, -1, 33); delay(500);
+                stop();
+                /* check flame
+                if(flame == 1)
+                  {
+                    digitalWrite(fan, 1);
+                    move(-1, 1, 133); delay(333);
+                    move(1, -1, 133); delay(666);
+                    move(-1, 1, 133); delay(333);
+                    stop();
+                    digitalWrite(fan, 0);
+                  }
+                */
+              }
+          }
+
+        move(-1, -1, 200); delay(500);
+        move(-1, 1, 175); delay(500);
+        stop(); delay(333);
      }
   else
      {
-        //digitalWrite(ledInd, 0);
+        move(1, 1, 50);
      }
 
   if (dht.getData()) {
