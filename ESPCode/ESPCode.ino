@@ -10,6 +10,15 @@ const int echoPin3 = 25;
 const int trigPin4 = 33; 
 const int echoPin4 = 32;
 
+// Motor 1
+const int motor1Pin1 = 2;
+const int motor1Pin2 = 4;
+const int enable1Pin = 5; // Speed (PWM)
+// Motor 2
+const int motor2Pin1 = 15;
+const int motor2Pin2 = 17;
+const int enable2Pin = 18; // Speed (PWM)
+
 const int ledInd = 22;
 Bonezegei_DHT11 dht(21);
 float tempDeg = 0;
@@ -38,6 +47,13 @@ void setup() {
   pinMode(trigPin4, OUTPUT);
   pinMode(echoPin4, INPUT);
   pinMode(ledInd, OUTPUT);
+
+  pinMode(motor1Pin1, OUTPUT);
+  pinMode(motor1Pin2, OUTPUT);
+  pinMode(enable1Pin, OUTPUT);
+  pinMode(motor2Pin1, OUTPUT);
+  pinMode(motor2Pin2, OUTPUT);
+  pinMode(enable2Pin, OUTPUT);
 
   dht.begin();
   digitalWrite(ledInd, 1); delay(3000);
