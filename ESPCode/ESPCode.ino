@@ -19,8 +19,10 @@ const int right_motorPin1 = 15;
 const int right_motorPin2 = 17;
 const int right_pwm = 18; // Speed (PWM)
 
+//const int flame_sensor = 34;
+//const int ledInd = 3;
 const int fan = 19;
-const int ledInd = 22;
+const int buzzer = 22;
 Bonezegei_DHT11 dht(21);
 float tempDeg = 0;
 
@@ -47,7 +49,8 @@ void setup() {
   pinMode(echoPin3, INPUT);
   pinMode(trigPin4, OUTPUT);
   pinMode(echoPin4, INPUT);
-  pinMode(ledInd, OUTPUT);
+  pinMode(buzzer, OUTPUT);
+  //pinMode(ledInd, OUTPUT);
 
   pinMode(left_motorPin1, OUTPUT);
   pinMode(left_motorPin2, OUTPUT);
@@ -55,12 +58,12 @@ void setup() {
   pinMode(right_motorPin1, OUTPUT);
   pinMode(right_motorPin2, OUTPUT);
   pinMode(right_pwm, OUTPUT);
-  
+
   pinMode(fan, OUTPUT);
 
   dht.begin();
-  digitalWrite(ledInd, 1); delay(3000);
-  digitalWrite(ledInd, 0);
+  digitalWrite(buzzer, 1); delay(3000);
+  digitalWrite(buzzer, 0);
 }
 
 void loop() {
