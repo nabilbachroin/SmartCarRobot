@@ -5,10 +5,12 @@
 #include "addons/TokenHelper.h"
 #include "addons/RTDBHelper.h"
 
-#define WIFI_SSID "Bachroin"
-#define WIFI_PASSWORD "masnabilganteng"
-#define API_KEY "AIzaSyB2TfOLtjRMxYWD5qA0TqWjH0ICUYg_6EA"
-#define DATABASE_URL "https://smartcarrobot-microsensors-default-rtdb.asia-southeast1.firebasedatabase.app/"
+#define WIFI_SSID "Dhika"
+#define WIFI_PASSWORD "hellooo8"
+#define API_KEY "AIzaSyCWA1NSc2xM4vd03VUERMS69mYw0ZW5Cmk"
+#define DATABASE_URL "https://micro-2023-default-rtdb.asia-southeast1.firebasedatabase.app/" 
+#define USER_EMAIL "abiel769@gmail.com"
+#define USER_PASSWORD "Microsensors123"
 FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
@@ -36,7 +38,13 @@ const int right_pwm = 18; // Speed (PWM)
 const int fan = 19;
 const int buzzer = 22;
 Bonezegei_DHT11 dht(21);
+
 float tempDeg = 0;
+int BottomDistance_L;
+int BottomDistance_R;
+int TopDistance_L;
+int TopDistance_R;
+String controlCommand;
 
 float getDistance(int trigPin, int echoPin) {
   digitalWrite(trigPin, LOW);
@@ -61,20 +69,26 @@ void setup() {
   Serial.println();
   Serial.print("Connected with IP: ");
   Serial.println(WiFi.localIP());
-  Serial.println();
+  Serial.println();  
+  
+  Serial.printf("Firebase Client v%s\n\n", FIREBASE_CLIENT_VERSION);
   config.api_key = API_KEY;
+  auth.user.email = USER_EMAIL;
+  auth.user.password = USER_PASSWORD;
   config.database_url = DATABASE_URL;
+  config.token_status_callback = tokenStatusCallback;
+  Firebase.reconnectNetwork(true);
+  fbdo.setBSSLBufferSize(4096, 1024);
+  fbdo.setResponseSize(2048);
+  Firebase.begin(&config, &auth);
   if (Firebase.signUp(&config, &auth, "", "")){
     Serial.println("ok");
-    signupOK = true;
   }
   else{
     Serial.printf("%s\n", config.signer.signupError.message.c_str());
   }
-  config.token_status_callback = tokenStatusCallback; //see addons/TokenHelper.h
-  Firebase.begin(&config, &auth);
-  Firebase.reconnectWiFi(true);
-
+  Firebase.setDoubleDigits(5);
+  config.timeout.serverResponse = 10 * 1000;
 
   pinMode(trigPin1, OUTPUT);
   pinMode(echoPin1, INPUT);
@@ -102,10 +116,21 @@ void setup() {
 }
 
 void loop() {
-  int BottomDistance_L = getDistance(trigPin1, echoPin1);
-  int BottomDistance_R = getDistance(trigPin2, echoPin2);
-  int TopDistance_L = getDistance(trigPin3, echoPin3);
-  int TopDistance_R = getDistance(trigPin4, echoPin4);
+  if (Firebase.RTDB.getString(&fbdo, "/control_command")) {
+    if (fbdo.dataType() == "string") {
+      controlCommand = fbdo.stringData();
+      Serial.print("ControlCommand: ");
+      Serial.println(controlCommand);
+    }
+  } else {
+    Serial.print("Gagal membaca control_command: ");
+    Serial.println(fbdo.errorReason());
+  }
+
+  BottomDistance_L = getDistance(trigPin1, echoPin1);
+  BottomDistance_R = getDistance(trigPin2, echoPin2);
+  TopDistance_L = getDistance(trigPin3, echoPin3);
+  TopDistance_R = getDistance(trigPin4, echoPin4);
 
   if((BottomDistance_L < 3 || BottomDistance_L > 4) || (BottomDistance_R < 2 || BottomDistance_R > 4) ||
      (TopDistance_L < 13) || (TopDistance_R < 13))
@@ -163,10 +188,10 @@ void loop() {
     Serial.println();
   }
 
-    if (tempDeg > 30) {
-      digitalWrite(ledInd, 1);
+  if (tempDeg > 30) {
+      //digitalWrite(ledInd, 1);
     } else {
-      digitalWrite(ledInd, 0);
+      //digitalWrite(ledInd, 0);
     }
 
   Serial.print("BottomDistance_L: ");
@@ -185,5 +210,48 @@ void loop() {
   Serial.print(TopDistance_R);
   Serial.println(" cm");
 
-  delay(333);
+  sendToFirebase();
+  delay(100);
+}
+
+void sendToFirebase() {
+  int distance = 50;
+
+  if (Firebase.RTDB.setInt(&fbdo, "/BottomDistance_L", BottomDistance_L)) {
+  } else {
+    Serial.println("Gagal mengirim jarak1");
+  }
+  if (Firebase.RTDB.setInt(&fbdo, "/BottomDistance_R", BottomDistance_R)) {
+  } else {
+    Serial.println("Gagal mengirim jarak2");
+  }
+  if (Firebase.RTDB.setInt(&fbdo, "/TopDistance_L", TopDistance_L)) {
+  } else {
+    Serial.println("Gagal mengirim jarak3");
+  }
+  if (Firebase.RTDB.setInt(&fbdo, "/TopDistance_R", TopDistance_R)) {
+  } else {
+    Serial.println("Gagal mengirim jarak4");
+  }
+
+  if (Firebase.RTDB.setFloat(&fbdo, "/temperature", tempDeg)) {
+  } else {
+    Serial.println("Gagal mengirim suhu");
+  }
+}
+
+
+void token_status_callback(TokenInfo info){
+  switch (info.status){
+    case token_status_error:
+      Serial.println("Token status: Error");
+      break;
+    case token_status_ready:
+      Serial.println("Token status: Ready");
+      break;
+    default:
+      Serial.print("Token status: Unknown - ");
+      Serial.println(info.status);
+      break;
+  }
 }
