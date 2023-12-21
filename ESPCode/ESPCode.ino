@@ -33,10 +33,10 @@ const int right_motorPin1 = 15;
 const int right_motorPin2 = 17;
 const int right_pwm = 18; // Speed (PWM)
 
-//const int flame_sensor = 34;
+const int flame_sensor = 34;
 //const int ledInd = 3;
 const int fan = 19;
-const int buzzer = 22;
+const int ledInd = 22;
 Bonezegei_DHT11 dht(21);
 
 float tempDeg = 0;
@@ -45,18 +45,6 @@ int BottomDistance_R;
 int TopDistance_L;
 int TopDistance_R;
 String controlCommand;
-
-float getDistance(int trigPin, int echoPin) {
-  digitalWrite(trigPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(trigPin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(trigPin, LOW);
-
-  float duration = pulseIn(echoPin, HIGH);
-  float distance = (duration * 0.0343) / 2;
-  return distance;
-}
 
 void setup() {
   Serial.begin(9600);
@@ -98,8 +86,7 @@ void setup() {
   pinMode(echoPin3, INPUT);
   pinMode(trigPin4, OUTPUT);
   pinMode(echoPin4, INPUT);
-  pinMode(buzzer, OUTPUT);
-  //pinMode(ledInd, OUTPUT);
+  pinMode(ledInd, OUTPUT);
 
   pinMode(left_motorPin1, OUTPUT);
   pinMode(left_motorPin2, OUTPUT);
@@ -109,13 +96,30 @@ void setup() {
   pinMode(right_pwm, OUTPUT);
 
   pinMode(fan, OUTPUT);
+  pinMode(flame_sensor, INPUT);
 
   dht.begin();
-  digitalWrite(buzzer, 1); delay(3000);
-  digitalWrite(buzzer, 0);
+  digitalWrite(ledInd, 1); delay(3000);
+  digitalWrite(ledInd, 0);
 }
 
 void loop() {
+  int sensorValue = analogRead(flameSensorPin);
+  if(sensorValue < 3500)
+    {
+      updateDanger();
+      move(-1, 1, );
+      while(1)
+        {
+
+        }
+      move(1, -1, );
+    }
+  else
+    {
+      updateSecure();
+    }
+
   if (Firebase.RTDB.getString(&fbdo, "/control_command")) {
     if (fbdo.dataType() == "string") {
       controlCommand = fbdo.stringData();
@@ -189,9 +193,9 @@ void loop() {
   }
 
   if (tempDeg > 30) {
-      //digitalWrite(ledInd, 1);
+      digitalWrite(ledInd, 1);
     } else {
-      //digitalWrite(ledInd, 0);
+      digitalWrite(ledInd, 0);
     }
 
   Serial.print("BottomDistance_L: ");
@@ -212,46 +216,4 @@ void loop() {
 
   sendToFirebase();
   delay(100);
-}
-
-void sendToFirebase() {
-  int distance = 50;
-
-  if (Firebase.RTDB.setInt(&fbdo, "/BottomDistance_L", BottomDistance_L)) {
-  } else {
-    Serial.println("Gagal mengirim jarak1");
-  }
-  if (Firebase.RTDB.setInt(&fbdo, "/BottomDistance_R", BottomDistance_R)) {
-  } else {
-    Serial.println("Gagal mengirim jarak2");
-  }
-  if (Firebase.RTDB.setInt(&fbdo, "/TopDistance_L", TopDistance_L)) {
-  } else {
-    Serial.println("Gagal mengirim jarak3");
-  }
-  if (Firebase.RTDB.setInt(&fbdo, "/TopDistance_R", TopDistance_R)) {
-  } else {
-    Serial.println("Gagal mengirim jarak4");
-  }
-
-  if (Firebase.RTDB.setFloat(&fbdo, "/temperature", tempDeg)) {
-  } else {
-    Serial.println("Gagal mengirim suhu");
-  }
-}
-
-
-void token_status_callback(TokenInfo info){
-  switch (info.status){
-    case token_status_error:
-      Serial.println("Token status: Error");
-      break;
-    case token_status_ready:
-      Serial.println("Token status: Ready");
-      break;
-    default:
-      Serial.print("Token status: Unknown - ");
-      Serial.println(info.status);
-      break;
-  }
 }
