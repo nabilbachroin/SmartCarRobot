@@ -30,7 +30,7 @@ void updateDanger() {
 }
 
 void updateSecure() {
-  if (Firebase.RTDB.setSInt(&fbdo, "/Fire", 0)) {
+  if (Firebase.RTDB.setInt(&fbdo, "/Fire", 0)) {
   } else {
     Serial.println("Gagal mengirim jarak1");
   }

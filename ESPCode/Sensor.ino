@@ -10,3 +10,11 @@ float getDistance(int trigPin, int echoPin) {
   return distance;
 }
 
+void emergencyProcedure() {
+  stop();
+  delay(100);
+  digitalWrite(fan, 1);
+  Serial.println("Fan aktif");
+  delay(3000);
+  digitalWrite(fan, 0);
+}

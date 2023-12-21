@@ -21,13 +21,13 @@ void move(int left, int right, int speed)
     
     if(right > 0)
       {
-        digitalWrite(right_motorPin1, HIGH);
-        digitalWrite(right_motorPin2, LOW);
+        digitalWrite(right_motorPin1, LOW);
+        digitalWrite(right_motorPin2, HIGH);
       }
     else if(right < 0)
       {
-        digitalWrite(right_motorPin1, LOW);
-        digitalWrite(right_motorPin2, HIGH);
+        digitalWrite(right_motorPin1, HIGH);
+        digitalWrite(right_motorPin2, LOW);
       }
 
     analogWrite(left_pwm, speed);

@@ -15,6 +15,9 @@ FirebaseData fbdo;
 FirebaseAuth auth;
 FirebaseConfig config;
 
+const int DemoPing_use_movementMotor = 39;
+const int speed = 85;
+
 const int trigPin1 = 12; 
 const int echoPin1 = 13;
 const int trigPin2 = 27;
@@ -45,6 +48,7 @@ int BottomDistance_R;
 int TopDistance_L;
 int TopDistance_R;
 String controlCommand;
+String manualCommand;
 
 void setup() {
   Serial.begin(9600);
@@ -95,125 +99,167 @@ void setup() {
   pinMode(right_motorPin2, OUTPUT);
   pinMode(right_pwm, OUTPUT);
 
+  pinMode(DemoPing_use_movementMotor, INPUT);
   pinMode(fan, OUTPUT);
   pinMode(flame_sensor, INPUT);
 
   dht.begin();
-  digitalWrite(ledInd, 1); delay(3000);
-  digitalWrite(ledInd, 0);
+  
+  digitalWrite(ledInd, 1); digitalWrite(fan, 1); delay(3000);
+  digitalWrite(ledInd, 0); digitalWrite(fan, 0);
 }
 
 void loop() {
-  int sensorValue = analogRead(flameSensorPin);
+  int trig = digitalRead(DemoPing_use_movementMotor);
+  int sensorValue = analogRead(flame_sensor);
+  Serial.print("Fire_anlg="); Serial.println(sensorValue);
   if(sensorValue < 3500)
     {
-      updateDanger();
-      move(-1, 1, );
+      if(!trig) updateDanger();
+      if(sensorValue < 20) {emergencyProcedure(); return;}
+      stop(); delay(333);
+      int prevsensorValue = sensorValue;
+      move(-1, 1, speed-5); delay(175); stop(); delay(33);
+      move(-1, 1, speed-5);
+      sensorValue = analogRead(flame_sensor);
+      if(sensorValue > prevsensorValue) move(1, -1, speed-5);
       while(1)
         {
-
+          sensorValue = analogRead(flame_sensor);
+          if(sensorValue < 20) {emergencyProcedure(); break;}
         }
-      move(1, -1, );
+      stop();
     }
   else
     {
-      updateSecure();
+      if(!trig) updateSecure();
     }
 
-  if (Firebase.RTDB.getString(&fbdo, "/control_command")) {
-    if (fbdo.dataType() == "string") {
-      controlCommand = fbdo.stringData();
-      Serial.print("ControlCommand: ");
-      Serial.println(controlCommand);
+  if(!trig)
+    {
+      if (Firebase.RTDB.getString(&fbdo, "/control_command")) {
+        if (fbdo.dataType() == "string") {
+          controlCommand = fbdo.stringData();
+          // Serial.print("ControlCommand: ");
+          // Serial.println(controlCommand);
+        }
+      } else {
+        Serial.print("Gagal membaca control_command: ");
+        Serial.println(fbdo.errorReason());
+      }
     }
-  } else {
-    Serial.print("Gagal membaca control_command: ");
-    Serial.println(fbdo.errorReason());
-  }
 
   BottomDistance_L = getDistance(trigPin1, echoPin1);
   BottomDistance_R = getDistance(trigPin2, echoPin2);
   TopDistance_L = getDistance(trigPin3, echoPin3);
   TopDistance_R = getDistance(trigPin4, echoPin4);
 
-  if((BottomDistance_L < 3 || BottomDistance_L > 4) || (BottomDistance_R < 2 || BottomDistance_R > 4) ||
-     (TopDistance_L < 13) || (TopDistance_R < 13))
-     {
-        stop(); delay(500);
-
-        if((TopDistance_L < 13) || (TopDistance_R < 13))
-          {
-            if(TopDistance_L < 13)
-              {
-                move(-1, 1, 33); delay(500);
-                stop();
-                /* check flame
-                if(flame == 1)
-                  {
-                    digitalWrite(fan, 1);
-                    move(-1, 1, 133); delay(333);
-                    move(1, -1, 133); delay(666);
-                    move(-1, 1, 133); delay(333);
-                    stop();
-                    digitalWrite(fan, 0);
-                  }
-                */
-              }
-            else
-              {
-                move(1, -1, 33); delay(500);
-                stop();
-                /* check flame
-                if(flame == 1)
-                  {
-                    digitalWrite(fan, 1);
-                    move(-1, 1, 133); delay(333);
-                    move(1, -1, 133); delay(666);
-                    move(-1, 1, 133); delay(333);
-                    stop();
-                    digitalWrite(fan, 0);
-                  }
-                */
-              }
-          }
-
-        move(-1, -1, 200); delay(500);
-        move(-1, 1, 175); delay(500);
-        stop(); delay(333);
-     }
-  else
-     {
-        move(1, 1, 50);
-     }
-
-  if (dht.getData()) {
-    tempDeg = dht.getTemperature();
-    Serial.printf("Temperature: %0.1lf°C ", tempDeg);
-    Serial.println();
-  }
-
-  if (tempDeg > 30) {
-      digitalWrite(ledInd, 1);
-    } else {
-      digitalWrite(ledInd, 0);
+  if(trig)
+    {
+      if((BottomDistance_L < 3 || BottomDistance_L > 4) || (BottomDistance_R < 2 || BottomDistance_R > 4) ||
+        (TopDistance_L < 20) || (TopDistance_R < 20))
+        {
+          stop(); delay(500);
+          if(TopDistance_R < 20 || (BottomDistance_L < 3 || BottomDistance_L > 4))
+            {
+              move(-1, 1, speed); delay(500);
+              stop(); delay(100);
+            }
+          else if(TopDistance_L < 20 || (BottomDistance_R < 2 || BottomDistance_R > 4))
+            {
+              move(1, -1, speed); delay(500);
+              stop(); delay(100);
+            }
+        }
+      else
+        {
+          move(1, 1, speed);
+        }
     }
 
-  Serial.print("BottomDistance_L: ");
-  Serial.print(BottomDistance_L);
-  Serial.println(" cm");
+  if(!trig)
+    {
+      if(controlCommand == "Manual")
+        {
+          bool idle = false;
+          if(TopDistance_R < 20 || TopDistance_L < 20) {stop(); idle=true;}
+          else idle=false;
+          if (Firebase.RTDB.getString(&fbdo, "/manual_command")) 
+            {
+              if (fbdo.dataType() == "string") 
+                {
+                  manualCommand = fbdo.stringData();
+                  // Serial.print("manualCommand: ");
+                  // Serial.println(manualCommand);
+                }
+              if(manualCommand == "left") move(-1, 1, speed);
+              else if(manualCommand == "right") move(1, -1, speed);
+              else if(manualCommand == "forward" && idle == false) {move(1, 1, speed);}
+              else if(manualCommand == "back") move(-1, -1, speed);
+              else if(manualCommand == "stop") stop();
+            } 
+          else 
+            {
+              Serial.print("Gagal membaca control_command: ");
+              Serial.println(fbdo.errorReason());
+            }
+        }
+      else if(controlCommand == "Auto")
+        {
+          if((BottomDistance_L < 3 || BottomDistance_L > 4) || (BottomDistance_R < 2 || BottomDistance_R > 4) ||
+            (TopDistance_L < 20) || (TopDistance_R < 20))
+            {
+              stop(); delay(500);
+              if(TopDistance_R < 20 || (BottomDistance_L < 3 || BottomDistance_L > 4))
+                {
+                  move(-1, 1, speed); delay(500);
+                  stop(); delay(100);
+                }
+              else if(TopDistance_L < 20 || (BottomDistance_R < 2 || BottomDistance_R > 4))
+                {
+                  move(1, -1, speed); delay(500);
+                  stop(); delay(100);
+                }
+            }
+          else
+            {
+              move(1, 1, speed);
+            }
+        }
+    }
 
-  Serial.print("BottomDistance_R: ");
-  Serial.print(BottomDistance_R);
-  Serial.println(" cm");
 
-  Serial.print("TopDistance_L: ");
-  Serial.print(TopDistance_L);
-  Serial.println(" cm");
+  if(!trig)
+    {
+      if (dht.getData()) {
+        tempDeg = dht.getTemperature();
+        // Serial.printf("Temperature: %0.1lf°C ", tempDeg);
+        // Serial.println();
+      }
 
-  Serial.print("TopDistance_R: ");
-  Serial.print(TopDistance_R);
-  Serial.println(" cm");
+      if (tempDeg > 30) {
+          digitalWrite(ledInd, 1);
+        } else {
+          digitalWrite(ledInd, 0);
+        }
+    }
 
-  sendToFirebase();
-  delay(100);
+  // Serial.print("BottomDistance_L: ");
+  // Serial.print(BottomDistance_L);
+  // Serial.println(" cm");
+
+  // Serial.print("BottomDistance_R: ");
+  // Serial.print(BottomDistance_R);
+  // Serial.println(" cm");
+
+  // Serial.print("TopDistance_L: ");
+  // Serial.print(TopDistance_L);
+  // Serial.println(" cm");
+
+  // Serial.print("TopDistance_R: ");
+  // Serial.print(TopDistance_R);
+  // Serial.println(" cm");
+
+  if(!trig) sendToFirebase();
+  delay(33);
 }
