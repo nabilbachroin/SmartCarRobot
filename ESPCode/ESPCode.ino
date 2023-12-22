@@ -112,8 +112,9 @@ void setup() {
 void loop() {
   int trig = digitalRead(DemoPing_use_movementMotor);
   int sensorValue = analogRead(flame_sensor);
-  Serial.print("Fire_anlg="); Serial.println(sensorValue);
-  if(sensorValue < 3500)
+  // Serial.print("Fire_anlg="); Serial.println(sensorValue);
+  //if(sensorValue < 3500)
+  if(sensorValue < 100)
     {
       if(!trig) updateDanger();
       if(sensorValue < 20) {emergencyProcedure(); return;}
@@ -156,24 +157,24 @@ void loop() {
 
   if(trig)
     {
-      if((BottomDistance_L < 3 || BottomDistance_L > 4) || (BottomDistance_R < 2 || BottomDistance_R > 4) ||
+      if((BottomDistance_L < 9 || BottomDistance_L > 17) || (BottomDistance_R < 9 || BottomDistance_R > 20) ||
         (TopDistance_L < 20) || (TopDistance_R < 20))
         {
-          stop(); delay(500);
-          if(TopDistance_R < 20 || (BottomDistance_L < 3 || BottomDistance_L > 4))
+          stop(); delay(500); move(-1, -1, speed-2); delay(150); stop(); delay(33);
+          if(TopDistance_R < 20 || (BottomDistance_L < 9 || BottomDistance_L > 17))
             {
-              move(-1, 1, speed); delay(500);
+              move(-1, 1, speed); delay(400);
               stop(); delay(100);
             }
-          else if(TopDistance_L < 20 || (BottomDistance_R < 2 || BottomDistance_R > 4))
+          else if(TopDistance_L < 20 || (BottomDistance_R < 9 || BottomDistance_R > 20))
             {
-              move(1, -1, speed); delay(500);
+              move(1, -1, speed); delay(400);
               stop(); delay(100);
             }
         }
       else
         {
-          move(1, 1, speed);
+          move(1, 1, speed-5);
         }
     }
 
@@ -206,18 +207,18 @@ void loop() {
         }
       else if(controlCommand == "Auto")
         {
-          if((BottomDistance_L < 3 || BottomDistance_L > 4) || (BottomDistance_R < 2 || BottomDistance_R > 4) ||
+          if((BottomDistance_L < 9 || BottomDistance_L > 17) || (BottomDistance_R < 9 || BottomDistance_R > 20) ||
             (TopDistance_L < 20) || (TopDistance_R < 20))
             {
               stop(); delay(500);
-              if(TopDistance_R < 20 || (BottomDistance_L < 3 || BottomDistance_L > 4))
+              if(TopDistance_R < 20 || (BottomDistance_L < 9 || BottomDistance_L > 17))
                 {
-                  move(-1, 1, speed); delay(500);
+                  move(-1, 1, speed); delay(400);
                   stop(); delay(100);
                 }
-              else if(TopDistance_L < 20 || (BottomDistance_R < 2 || BottomDistance_R > 4))
+              else if(TopDistance_L < 20 || (BottomDistance_R < 9 || BottomDistance_R > 20))
                 {
-                  move(1, -1, speed); delay(500);
+                  move(1, -1, speed); delay(400);
                   stop(); delay(100);
                 }
             }
